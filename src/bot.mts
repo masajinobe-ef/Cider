@@ -1,32 +1,53 @@
-
 import TelegramBot from 'node-telegram-bot-api';
-import { getRecipesByIngredients } from './recipe';
+import { handleRecipeRequest } from './recipe.mjs';
+import { handleAlcoRequest } from './alcohol.mjs'
+import dotenv from 'dotenv';
 
-const token = 'YOUR_TELEGRAM_BOT_TOKEN';
-const bot = new TelegramBot(token, { polling: true });
+dotenv.config();
 
+const telegramBotToken: string = process.env.TELEGRAM_BOT_TOKEN || '';
 
-bot.on('message', async (msg) => {
+if (!telegramBotToken) {
+    throw new Error('TELEGRAM_BOT_TOKEN is not defined in the environment variables.');
+}
+
+const bot = new TelegramBot(telegramBotToken, { polling: true });
+
+export const sendMessage = (chatId: number, message: string) => {
+    bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+};
+
+bot.onText(/\/recipe (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
-    const ingredients = msg.text;
 
-    try {
-        const recipes = await getRecipesByIngredients(ingredients);
-        if (recipes.length > 0) {
-            const recipeMessages = recipes.map((recipe: any) => {
-                return `${recipe.title}\nСсылка: https://spoonacular.com/recipes/${recipe.id}`;
-            }).join('\n\n');
-            bot.sendMessage(chatId, recipeMessages);
-        } else {
-            bot.sendMessage(chatId, 'Рецепты не найдены для указанных ингредиентов.');
+    if (match && match[1]) {
+        const ingredients: string = match[1].trim();
+
+        if (!ingredients) {
+            sendMessage(chatId, '⚠️ Пожалуйста, укажите ингредиенты после команды /recipe.');
+            return;
         }
-    } catch (error) {
-        bot.sendMessage(chatId, 'Произошла ошибка при получении рецептов.');
+
+        handleRecipeRequest(chatId, ingredients);
+    } else {
+        sendMessage(chatId, '⚠️ Пожалуйста, укажите ингредиенты после команды /recipe.');
     }
 });
 
-
-bot.onText(/\/start/, (msg) => {
+bot.onText(/\/help/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, 'Отправьте мне ингредиенты через запятую, и я найду для вас рецепты!');
+    const helpMessage = `
+🍎 Cider - Поиск рецептов и алкогольных напитков.
+
+🛠️ Команды:
+- /recipe [ингредиенты] - Найти рецепты по указанным ингредиентам.
+- /alco - Получить случайный коктейль.
+    `;
+    sendMessage(chatId, helpMessage);
 });
+
+bot.onText(/\/alco/, (msg) => {
+    const chatId = msg.chat.id;
+    handleAlcoRequest(chatId);
+});
+
