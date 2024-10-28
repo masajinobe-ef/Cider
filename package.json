@@ -1,0 +1,20 @@
+{
+    "name": "Cider",
+    "version": "0.1.0",
+    "description": "🍎 Telegram bot for recipe & alcohol search on NodeJS.",
+    "main": "dist/bot.mjs",
+    "repository": "https://github.com/masajinobe-ef/Cider",
+    "author": "masajinobe-ef",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.7.7",
+        "node-telegram-bot-api": "^0.66.0"
+    },
+    "devDependencies": {
+        "@types/axios": "^0.14.4",
+        "@types/node": "^22.8.1",
+        "@types/node-telegram-bot-api": "^0.64.7",
+        "prettier": "^3.3.3",
+        "typescript": "^5.6.3"
+    }
+}
